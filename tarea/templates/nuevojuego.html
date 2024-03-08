@@ -1,0 +1,7 @@
+<h1>Agrega un juego</h1>
+{{msg}}
+<form action="/nuevo/" method="POST">
+{% csrf_token %}
+{{form}}
+<button>Agregar</button>
+</form>
