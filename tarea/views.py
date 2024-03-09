@@ -5,6 +5,7 @@ from django.contrib.auth.models import User
 from django.db import IntegrityError
 from django.contrib.auth import login, logout, authenticate
 from .forms import VideojuegoForm
+from django.contrib.auth.decorators import login_required
 
 def holamundo(request):
     return HttpResponse("Hola mundo")
@@ -72,26 +73,33 @@ def cerrarsesion(request):
     logout(request)
     return redirect("/")
 
+@login_required
 def nuevoJuego(request):
     if request.method == "GET":
         return render(request, "nuevojuego.html", {
                     "form": VideojuegoForm,
     })
     else:
-        form = VideojuegoForm(request.POST)
-        if form.is_valid():
-            nuevo = form.save(commit=False)
-            if request.user.is_authenticated:
-                nuevo.usuario = request.user
-                nuevo.save()
-                return redirect("/")
+        try:
+            form = VideojuegoForm(request.POST)
+            if form.is_valid():
+                nuevo = form.save(commit=False)
+                if request.user.is_authenticated:
+                    nuevo.usuario = request.user
+                    nuevo.save()
+                    return redirect("/")
+                else:
+                    return render(request, "nuevojuego.html", {
+                        "form": VideojuegoForm,
+                        "msg": "Debe de auntenticarse"
+    })
             else:
                 return render(request, "nuevojuego.html", {
-                    "form": VideojuegoForm,
-                    "msg": "Debe de auntenticarse"
+                        "form": VideojuegoForm,
+                        "msg": "Este formulario no es válido"
     })
-        else:
+        except Exception as e:
             return render(request, "nuevojuego.html", {
-                    "form": VideojuegoForm,
-                    "msg": "Este formulario no es válido"
-    })
+                        "form": VideojuegoForm,
+                        "msg": f"Hubo un error de autenticación {e}"
+   })
